@@ -8,10 +8,10 @@ Data:01/03/22
 //=====================================================Bibliotecas=================================================================================================
 
 //=====================================================Definições==================================================================================================
-#define nop __asm__("nop\n\t")
-#define debug 0
-#define COM_start  PORTB &= ~(1<<PB2)
-#define COM_end  PORTB |=  (1<<PB2)
+#define nop __asm__("nop\n\t")              //Processador não execulta nada durante um ciclo (nop migrado do assembly)
+#define debug 0                             //Váriavel para ligar ou deligar o debug via terminal
+#define COM_start  PORTB &= ~(1<<PB2)       //Inicia a comunicação SPI escrevendo 0 no pino 10
+#define COM_end    PORTB |=  (1<<PB2)       //Finaliza a comunicação SPI escrevendo 1 no pino 10
 //==================================================Variáveis globais==============================================================================================
 
 //=================================================Protótipo de funções============================================================================================
@@ -27,7 +27,7 @@ void SPI_MasterBegin(){ //Configura os registradores do SPI
   DDRB = (1<<PB2)|(1<<PB3)|(0<<PB4)|(1<<PB5);//0b00101100 : PB5(MOSI)output, PB4(MISO)input, PB3(SCK)output, PB2(/SS)output
   PORTB |=(1<<PB2);//Pino 10 em HIGH
   //Configurando SPI
-  SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(1<<SPR1)|(1<<SPR0);
+  SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(0<<SPR1)|(1<<SPR0);
   //(Ligando o SPI),(MSB primeiro),(Borda de subida do clock),(Fase do clock),(Velocidade do clock)
   /*SPR1  SPR0  CLOCK
     0     0     fosk/4
@@ -46,7 +46,7 @@ void SPI_Write(unsigned char data){
   while(!(SPSR&(1<<SPIF)));// Testa a flag de termino de trasmissão e aguarda se setada
 }
 
-void SPI_Message(unsigned char *data){//Envia uma sequencia de dados via SPI em pares
+void SPI_Message(unsigned char *data){//Envia um vetor de bytes via SPI em pares
   int aux=1;
   while(*data != NULL){
     if(aux%2 == 1){
