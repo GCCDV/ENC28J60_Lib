@@ -8,7 +8,7 @@
 //=====================================================Definições==================================================================================================
 
 #define OP_WCR    0x40 //Write Control Register
-#define OP_RCR    0x00 //Write Control Register
+#define OP_RCR    0x00 //Read Control Register
 
 #define ECON1     0x1F //used to control the main functions of the ENC28J60.
   #define BANK0   0x00
@@ -24,6 +24,33 @@
 
 #define EREVID    0x12 // Revision Information
 
+
+
+#define ERXST_INIT   0x0000  
+#define ERXND_INIT   (0x1FFF-0x0600-1)
+#define ETXST_INIT   (0x1FFF-0x0600)
+#define ETXND_INIT   0x1FFF
+
+#define ETXSTL    0x04
+#define ETXSTH    0x05
+#define ETXNDL    0x06
+#define ETXNDH    0x07
+#define ERXSTL    0x08
+#define ERXSTH    0x09
+#define ERXNDL    0x0A
+#define ERXNDH    0x0B
+#define ERXRDPTL  0x0C
+#define ERXRDPTH  0x0D
+#define ERXWRPTL  0x0E
+#define ERXWRPTH  0x0F
+#define EDMASTL   0x10
+#define EDMASTH   0x11
+#define EDMANDL   0x12
+#define EDMANDH   0x13
+#define EDMADSTL  0x14
+#define EDMADSTH  0x15
+#define EDMACSL   0x16
+#define EDMACSH   0x17
 
 //==================================================Variáveis globais==============================================================================================
 
@@ -92,6 +119,26 @@ unsigned char ENC28J60_Read_Buffer(){
 }
 unsigned char ENC28J60_Revision(){
   return ENC28J60_Read(BANK3,EREVID);
+}
+
+void ENC28J60_Init(){
+  //BANK0
+  ENC28J60_SetBank(OP_WCR,BANK0);
+  // Rx start
+  ENC28J60_Write(OP_WCR,ERXSTL, ERXST_INIT&0xFF);
+  ENC28J60_Write(OP_WCR,ERXSTH, ERXST_INIT>>8);
+  // set receive pointer address
+  ENC28J60_Write(OP_WCR,ERXRDPTL, ERXST_INIT&0xFF);
+  ENC28J60_Write(OP_WCR,ERXRDPTH, ERXST_INIT>>8);
+  // RX end
+  ENC28J60_Write(OP_WCR,ERXNDL, ERXND_INIT&0xFF);
+  ENC28J60_Write(OP_WCR,ERXNDH, ERXND_INIT>>8);
+  // TX start
+  ENC28J60_Write(OP_WCR,ETXSTL, ETXST_INIT&0xFF);
+  ENC28J60_Write(OP_WCR,ETXSTH, ETXST_INIT>>8);
+  // TX end
+  ENC28J60_Write(OP_WCR,ETXNDL, ETXND_INIT&0xFF);
+  ENC28J60_Write(OP_WCR,ETXNDH, ETXND_INIT>>8);
 }
 
 //=====================================================Funções=====================================================================================================
