@@ -1,11 +1,5 @@
 void enc28j60Init(uint8_t* macaddr)
 {
-  
-
-
-
-
-
 	// do bank 0 stuff
 	// initialize receive buffer
 	// 16-bit transfers, must write low byte first
@@ -45,11 +39,11 @@ void enc28j60Init(uint8_t* macaddr)
         //
 	// do bank 2 stuff
 	// enable MAC receive
-	enc28j60Write(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);
+	enc28j60Write(MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);0x01|0x08|0x04 -> 0000 1101 0000 0101
 	// bring MAC out of reset
 	enc28j60Write(MACON2, 0x00);
 	// enable automatic padding to 60bytes and CRC operations
-	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
+	enc28j60WriteOp(ENC28J60_BIT_FIELD_SET, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);0x20|0x10|0x02 -> 0011 0010   0101 0010
 	// set inter-frame gap (non-back-to-back)
 	enc28j60Write(MAIPGL, 0x12);
 	enc28j60Write(MAIPGH, 0x0C);
@@ -57,8 +51,8 @@ void enc28j60Init(uint8_t* macaddr)
 	enc28j60Write(MABBIPG, 0x12);
 	// Set the maximum packet size which the controller will accept
         // Do not send packets longer than MAX_FRAMELEN:
-	enc28j60Write(MAMXFLL, MAX_FRAMELEN&0xFF);	
-	enc28j60Write(MAMXFLH, MAX_FRAMELEN>>8);
+	enc28j60Write(MAMXFLL, MAX_FRAMELEN & 0xFF); 	
+	enc28j60Write(MAMXFLH, MAX_FRAMELEN >> 8);0001 0111 1101 1100
 	// do bank 3 stuff
         // write MAC address
         // NOTE: MAC address in ENC28J60 is byte-backward
@@ -69,7 +63,7 @@ void enc28j60Init(uint8_t* macaddr)
         enc28j60Write(MAADR1, macaddr[4]);
         enc28j60Write(MAADR0, macaddr[5]);
 	// no loopback of transmitted frames
-	enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);
+	enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);0x0100 ->0000 0001 0000 0000
 	// switch to bank 0
 	enc28j60SetBank(ECON1);
 	// enable interrutps

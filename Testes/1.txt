@@ -1,0 +1,16 @@
+ponteiros de 16bits, que corresponde a uma memoria de 8kbyte
+
+
+
+Alocação de memoria-> Setar ponteiros RX
+					*Ponteiros ERXST(start) e ERXND(end) do buffer
+								-3.2 Não é possivel modificar  while(ECON1.RXEN is set)
+															+ PAG.17 (Antes do bank) 
+															+ Lembrar de voltar, porque ele ignora todos os pacotes
+								-
+		   -> Espaço de 7bytes
+		   -> Setar ponteiros TX (DESCOBRIR)
+		    
+	1010 1010
+
+Filtro

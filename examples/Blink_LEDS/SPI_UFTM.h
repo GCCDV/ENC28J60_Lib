@@ -1,15 +1,15 @@
 
 /*Biblioteca controle da interfece SPI do atmega328p
-Versão: 0.3
+Versão: 0.1
 Autores:Breno Borrasqui;Gabriel Candido;Larisse Souza;Rafaela Borges;Vittorio Maretto
-Data:25/03/22  
+Data:01/03/22  
 */
 
 //=====================================================Bibliotecas=================================================================================================
 
 //=====================================================Definições==================================================================================================
 #define nop __asm__("nop\n\t")              //Processador não execulta nada durante um ciclo (nop migrado do assembly)
-#define debug 0                            //Váriavel para ligar ou deligar o debug via terminal
+#define debug 0                             //Váriavel para ligar ou deligar o debug via terminal
 #define COM_start  PORTB &= ~(1<<PB2)       //Inicia a comunicação SPI escrevendo 0 no pino 10
 #define COM_end    PORTB |=  (1<<PB2)       //Finaliza a comunicação SPI escrevendo 1 no pino 10
 //==================================================Variáveis globais==============================================================================================
@@ -27,7 +27,7 @@ void SPI_MasterBegin(){ //Configura os registradores do SPI
   DDRB = (1<<PB2)|(1<<PB3)|(0<<PB4)|(1<<PB5);//0b00101100 : PB5(MOSI)output, PB4(MISO)input, PB3(SCK)output, PB2(/SS)output
   PORTB |=(1<<PB2);//Pino 10 em HIGH
   //Configurando SPI
-  SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(0<<SPR1)|(0<<SPR0);
+  SPCR = (1<<SPE)|(0<<DORD)|(1<<MSTR)|(0<<CPOL)|(0<<CPHA)|(0<<SPR1)|(1<<SPR0);
   //(Ligando o SPI),(MSB primeiro),(Borda de subida do clock),(Fase do clock),(Velocidade do clock)
   /*SPR1  SPR0  CLOCK
     0     0     fosk/4
@@ -40,7 +40,6 @@ void SPI_MasterBegin(){ //Configura os registradores do SPI
 }
 
 void SPI_Write(unsigned char data){
-  if(debug)Serial.println("Write:");
   if(debug)Serial.println(data,HEX);
 
   SPDR = data; //Grava o dado no registrador de comunicação
@@ -64,20 +63,20 @@ void SPI_Message(unsigned char *data){//Envia um vetor de bytes via SPI em pares
   }
 }
 
-unsigned char SPI_Read(unsigned char address){
-  
+unsigned char SPI_read(unsigned char andress){
   COM_start;
-  
-  SPI_Write(address);
 
-  SPI_Write(0x00);
+  SPDR = andress; //Grava o dado no registrador de comunicação
+  
+  while(!(SPSR & (1<<SPIF)));// Testa a flag de termino de trasmissão e aguarda se setada
 
-  COM_end;
+  SPDR = 0b00000000; //Grava o dado no registrador de comunicação
   
-  if(debug)Serial.println("read:");
-  if(debug)Serial.println(SPDR,HEX);
-  
+  while(!(SPSR & (1<<SPIF)));// Testa a flag de termino de trasmissão e aguarda se setada
+
   unsigned char message = SPDR;
  
+  COM_end;
+
   return message;
 }
