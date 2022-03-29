@@ -1,10 +1,8 @@
-
 /*Biblioteca controle da interfece SPI do atmega328p
 Versão: 0.3
 Autores:Breno Borrasqui;Gabriel Candido;Larisse Souza;Rafaela Borges;Vittorio Maretto
 Data:25/03/22  
 */
-
 //=====================================================Bibliotecas=================================================================================================
 
 //=====================================================Definições==================================================================================================
@@ -19,7 +17,6 @@ void SPI_MasterBegin();
 void SPI_Write(unsigned char data);
 void SPI_Message(unsigned char data);
 unsigned char SPI_Read(unsigned char andress);
-
 
 //=====================================================Funções=====================================================================================================
 void SPI_MasterBegin(){ //Configura os registradores do SPI

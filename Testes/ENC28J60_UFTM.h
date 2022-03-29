@@ -5,41 +5,49 @@
 
 //=====================================================Bibliotecas=================================================================================================
 #include "SPI_UFTM.h"
-#include "ARP.h"
 //=====================================================Definições==================================================================================================
 
 #define OP_WCR    0x40 //Write Control Register
 #define OP_RCR    0x00 //Read Control Register
 #define OP_WBM    0x60 //Write Buffer Memory
-#define OP_BFS    0x80 //Bit Fild Set
+#define OP_BFS    0x80 //Bit Fild Set breno vai usar
+#define OP_BFC    0xA0 // breno vai usar
+#define ECON1_BSEL1      0x02 // breno vai usar
+#define ECON1_BSEL0      0x01 // breno vai usar
+
+#define RBM              0x1A // breno vai usar
+#define ECON1_TXRTS      0x08 // breno vai usar
+#define ESTAT            0x1D // breno vai usar
+#define EIR              0x1C // breno vai usar
+#define EIR_TXERIF       0x02 // breno vai usar
 
 #define ECON1     0x1F //used to control the main functions of the ENC28J60.
 #define ECON1_RXEN       0x04
 
-  #define BANK0   0x00
-  #define BANK1   0x01
-  #define BANK2   0x02
-  #define BANK3   0x03
-  
+#define BANK0   0x00
+#define BANK1   0x01
+#define BANK2   0x02
+#define BANK3   0x03
+
 #define MIREGADR  0x14 // MII Register Address
-  #define  MIWRL  0x16 // MII Write Data Low Byte
-  #define  MIWRH  0x17 // MII Write Data High Byte
+#define  MIWRL  0x16 // MII Write Data Low Byte
+#define  MIWRH  0x17 // MII Write Data High Byte
 
 #define PHLCON    0x14 // PHY MODULE LED CONTROL REGISTER 0011 0100 0010 001x
 
 #define EREVID    0x12 // Revision Information
 
-
-
-#define ERXST_INIT   0x0000  
+#define ERXST_INIT   0x0000
 #define ERXND_INIT   (0x1FFF-0x0600-1)
-#define ETXST_INIT   (0x1FFF-0x0600)
+#define ETXST_INIT   (0x1FFF-0x0600) // breno vai precisar
 #define ETXND_INIT   0x1FFF
 
+#define EWRPTL    0x02 // breno
+#define EWRPTH    0x03 // breno
 #define ETXSTL    0x04
 #define ETXSTH    0x05
-#define ETXNDL    0x06
-#define ETXNDH    0x07
+#define ETXNDL    0x06 // breno vai precisar
+#define ETXNDH    0x07 // breno vai precisar
 #define ERXSTL    0x08
 #define ERXSTH    0x09
 #define ERXNDL    0x0A
@@ -95,7 +103,6 @@
 #define MACON3_FRMLNEN   0x02
 #define MACON3_FULDPX    0x01
 
-
 #define MABBIPG          0x04
 #define MAIPGL           0x06
 #define MAIPGH           0x07
@@ -119,11 +126,6 @@
 // ENC28J60 PHY PHCON2 Register Bit Definitions
 #define PHCON2_HDLDIS    0x0100
 
-
-
-
-
-
 // max frame length which the conroller will accept:
 #define        MAX_FRAMELEN        1500        // (note: maximum ethernet frame length would be 1518)
 //#define MAX_FRAMELEN     600
@@ -131,155 +133,146 @@
 //==================================================Variáveis globais==============================================================================================
 
 //=================================================Protótipo de funções============================================================================================
-void ENC28J60_SetBank(unsigned char op,unsigned char bank){
-  if(debug)Serial.println("SetBank");
+void ENC28J60_SetBank(unsigned char bank) {
   COM_start;
-  
-  SPI_Write(op|ECON1);
+  SPI_Write(OP_BFC|ECON1);
+
+  SPI_Write(ECON1_BSEL1|ECON1_BSEL0);
+  COM_end;
+
+  COM_start;
+
+  SPI_Write(OP_BFS| ECON1);
 
   SPI_Write(bank);
+  if (debug)Serial.print("SetBank");
+  if (debug)Serial.println(bank);
 
   COM_end;
 }
-void ENC28J60_Write(unsigned char op,unsigned char address, unsigned char data){
+void ENC28J60_Write(unsigned char op, unsigned char address, unsigned char data) {
   COM_start;
 
-  SPI_Write(op|address);
+  SPI_Write(op | address);
 
   SPI_Write(data);
 
   COM_end;
-  
 }
-void ENC28J60_BlinkLEDs(int ms){
-  ENC28J60_SetBank(OP_WCR,BANK2);
 
-  ENC28J60_Write(OP_WCR,MIREGADR,PHLCON);
-  ENC28J60_Write(OP_WCR,MIWRL,0x82);
-  ENC28J60_Write(OP_WCR,MIWRH,0x38);
+void ENC28J60_BlinkLEDs(int ms) {
+  ENC28J60_SetBank(BANK2);
+
+  ENC28J60_Write(OP_WCR, MIREGADR, PHLCON);
+  ENC28J60_Write(OP_WCR, MIWRL, 0x82);
+  ENC28J60_Write(OP_WCR, MIWRH, 0x38);
 
   delay(ms);
 
-  ENC28J60_Write(OP_WCR,MIREGADR,PHLCON);
-  ENC28J60_Write(OP_WCR,MIWRL,0x92);
-  ENC28J60_Write(OP_WCR,MIWRH,0x39);
-  
-  delay(ms);
-  
-  ENC28J60_Write(OP_WCR,MIREGADR,PHLCON);
-  ENC28J60_Write(OP_WCR,MIWRL,0x82);
-  ENC28J60_Write(OP_WCR,MIWRH,0x38);
+  ENC28J60_Write(OP_WCR, MIREGADR, PHLCON);
+  ENC28J60_Write(OP_WCR, MIWRL, 0x92);
+  ENC28J60_Write(OP_WCR, MIWRH, 0x39);
 
   delay(ms);
 
-  ENC28J60_Write(OP_WCR,MIREGADR,PHLCON);
-  ENC28J60_Write(OP_WCR,MIWRL,0x92);
-  ENC28J60_Write(OP_WCR,MIWRH,0x39);
+  ENC28J60_Write(OP_WCR, MIREGADR, PHLCON);
+  ENC28J60_Write(OP_WCR, MIWRL, 0x82);
+  ENC28J60_Write(OP_WCR, MIWRH, 0x38);
 
-  
+  delay(ms);
+
+  ENC28J60_Write(OP_WCR, MIREGADR, PHLCON);
+  ENC28J60_Write(OP_WCR, MIWRL, 0x92);
+  ENC28J60_Write(OP_WCR, MIWRH, 0x39);
 }
-void ENC28J60_Reset(void){             // System Reset Command (Soft Reset) 
-    COM_start;                 // Enable
-    SPI_Write(0xFF);
-    COM_end ;                 // Disable
-    _delay_ms(52);
+void ENC28J60_Reset(void) {            // System Reset Command (Soft Reset)  
+  COM_start;                 // Enable
+  SPI_Write(0xFF);
+  COM_end ;                 // Disable
+  delay(100);
 }
-unsigned char ENC28J60_Read(unsigned char bank,unsigned char address){
- 
-  ENC28J60_SetBank(OP_RCR,bank);
+unsigned char ENC28J60_Read(unsigned char bank, unsigned char address) {
+
+  ENC28J60_SetBank(bank);
   return SPI_Read(address);
- 
+
 }
-unsigned char ENC28J60_Read_Buffer(){
- 
-}
-unsigned char ENC28J60_Revision(){
-  return ENC28J60_Read(BANK3,EREVID);
+unsigned char ENC28J60_Revision() {
+  return ENC28J60_Read(BANK3, EREVID);
 }
 
-void ENC28J60_Init(unsigned char *macaddr){
+void ENC28J60_Init(unsigned char *macaddr) {
   ENC28J60_Reset();
   //BANK0
-  ENC28J60_SetBank(OP_WCR,BANK0);//TROCA PARA BANCO 0
+  ENC28J60_SetBank(BANK0); //TROCA PARA BANCO 0
   // Rx start
-  ENC28J60_Write(OP_WCR,ERXSTL, ERXST_INIT&0xFF);
-  ENC28J60_Write(OP_WCR,ERXSTH, ERXST_INIT>>8);
+  ENC28J60_Write(OP_WCR, ERXSTL, ERXST_INIT & 0xFF);
+  ENC28J60_Write(OP_WCR, ERXSTH, ERXST_INIT >> 8);
   // set receive pointer address
-  ENC28J60_Write(OP_WCR,ERXRDPTL, ERXST_INIT&0xFF);
-  ENC28J60_Write(OP_WCR,ERXRDPTH, ERXST_INIT>>8);
+  ENC28J60_Write(OP_WCR, ERXRDPTL, ERXST_INIT & 0xFF);
+  ENC28J60_Write(OP_WCR, ERXRDPTH, ERXST_INIT >> 8);
   // RX end
-  ENC28J60_Write(OP_WCR,ERXNDL, ERXND_INIT&0xFF);
-  ENC28J60_Write(OP_WCR,ERXNDH, ERXND_INIT>>8);
+  ENC28J60_Write(OP_WCR, ERXNDL, ERXND_INIT & 0xFF);
+  ENC28J60_Write(OP_WCR, ERXNDH, ERXND_INIT >> 8);
   // TX start
-  ENC28J60_Write(OP_WCR,ETXSTL, ETXST_INIT&0xFF);
-  ENC28J60_Write(OP_WCR,ETXSTH, ETXST_INIT>>8);
+  ENC28J60_Write(OP_WCR, ETXSTL, ETXST_INIT & 0xFF);
+  ENC28J60_Write(OP_WCR, ETXSTH, ETXST_INIT >> 8);
   // TX end
-  ENC28J60_Write(OP_WCR,ETXNDL, ETXND_INIT&0xFF);
-  ENC28J60_Write(OP_WCR,ETXNDH, ETXND_INIT>>8);
+  ENC28J60_Write(OP_WCR, ETXNDL, ETXND_INIT & 0xFF);
+  ENC28J60_Write(OP_WCR, ETXNDH, ETXND_INIT >> 8);
   //BANK1
-  ENC28J60_SetBank(OP_WCR,BANK1);//TROCA PARA BANCO 1
-  
-    ENC28J60_Write(OP_WCR, ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN|ERXFCON_PMEN);//BROADCAST ...//conferir opcode
+  ENC28J60_SetBank(BANK1); //TROCA PARA BANCO 1
 
-  
-    ENC28J60_Write(OP_WCR,EPMM0,  0x3f);//Conferir codigo OP
-    ENC28J60_Write(OP_WCR,EPMM1,  0x30);
-    ENC28J60_Write(OP_WCR,EPMCSL, 0xf9);
-    ENC28J60_Write(OP_WCR,EPMCSH, 0xf7);
+  ENC28J60_Write(OP_WCR, ERXFCON, ERXFCON_UCEN | ERXFCON_CRCEN | ERXFCON_PMEN); //BROADCAST ...//conferir opcode
+
+  ENC28J60_Write(OP_WCR, EPMM0,  0x3f); //Conferir codigo OP
+  ENC28J60_Write(OP_WCR, EPMM1,  0x30);
+  ENC28J60_Write(OP_WCR, EPMCSL, 0xf9);
+  ENC28J60_Write(OP_WCR, EPMCSH, 0xf7);
 
   // do bank 2 stuff
-  ENC28J60_SetBank(OP_WCR,BANK2);//TROCA PARA BANCO 2
+  ENC28J60_SetBank(BANK2); //TROCA PARA BANCO 2
   // enable MAC receive
-  
-  ENC28J60_Write(OP_WCR,MACON1, MACON1_MARXEN|MACON1_TXPAUS|MACON1_RXPAUS);
+
+  ENC28J60_Write(OP_WCR, MACON1, MACON1_MARXEN | MACON1_TXPAUS | MACON1_RXPAUS);
   // bring MAC out of reset
-  ENC28J60_Write(OP_WCR,MACON2, 0x00);
- // enable automatic padding to 60bytes and CRC operations
-  ENC28J60_Write(OP_BFS, MACON3, MACON3_PADCFG0|MACON3_TXCRCEN|MACON3_FRMLNEN);
+  ENC28J60_Write(OP_WCR, MACON2, 0x00);
+  // enable automatic padding to 60bytes and CRC operations
+  ENC28J60_Write(OP_BFS, MACON3, 0x32);
+  //ENC28J60_Write(OP_WCR, MACON3, 0x32);
   // set inter-frame gap (non-back-to-back)
   ENC28J60_Write(OP_WCR, MAIPGL, 0x12);
   ENC28J60_Write(OP_WCR, MAIPGH, 0x0C);
   // set inter-frame gap (back-to-back)
   ENC28J60_Write(OP_WCR, MABBIPG, 0x12);
-  // Set the maximum packet size which the controller will accept
+  // Set the maximum packet size which the cMACON3_PADCFG0 | MACON3_TXCRCEN | MACON3_FRMLNENontroller will accept
   // Do not send packets longer than MAX_FRAMELEN:
-  ENC28J60_Write(OP_WCR, MAMXFLL, MAX_FRAMELEN&0xFF);  
-  ENC28J60_Write(OP_WCR, MAMXFLH, MAX_FRAMELEN>>8);
-   
-   // do bank 3 stuff
-   ENC28J60_SetBank(OP_WCR,BANK3);//TROCA PARA BANCO 3
-   
+  ENC28J60_Write(OP_WCR, MAMXFLL, MAX_FRAMELEN & 0xFF);
+  ENC28J60_Write(OP_WCR, MAMXFLH, MAX_FRAMELEN >> 8);
+
+  // do bank 3 stuff
+  ENC28J60_SetBank(BANK3); //TROCA PARA BANCO 3
+
   // write MAC address
-        // NOTE: MAC address in ENC28J60 is byte-backward
-        ENC28J60_Write(OP_WCR, MAADR5, macaddr[0]);
-        ENC28J60_Write(OP_WCR, MAADR4, macaddr[1]);
-        ENC28J60_Write(OP_WCR, MAADR3, macaddr[2]);
-        ENC28J60_Write(OP_WCR, MAADR2, macaddr[3]);
-        ENC28J60_Write(OP_WCR, MAADR1, macaddr[4]);
-        ENC28J60_Write(OP_WCR, MAADR0, macaddr[5]);
- // no loopback of transmitted frames
-     //                 enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);
-     ENC28J60_Write(OP_WCR,MIREGADR,PHCON2);
-     ENC28J60_Write(OP_WCR,MIWRL,PHCON2_HDLDIS);// 01010101 11111111
-     ENC28J60_Write(OP_WCR,MIWRH,PHCON2_HDLDIS>>8);
+  // NOTE: MAC address in ENC28J60 is byte-backward
+  ENC28J60_Write(OP_WCR, MAADR5, macaddr[0]);
+  ENC28J60_Write(OP_WCR, MAADR4, macaddr[1]);
+  ENC28J60_Write(OP_WCR, MAADR3, macaddr[2]);
+  ENC28J60_Write(OP_WCR, MAADR2, macaddr[3]);
+  ENC28J60_Write(OP_WCR, MAADR1, macaddr[4]);
+  ENC28J60_Write(OP_WCR, MAADR0, macaddr[5]);
   
+  // no loopback of transmitted frames
+  //                 enc28j60PhyWrite(PHCON2, PHCON2_HDLDIS);
+  ENC28J60_SetBank(BANK2);
+  ENC28J60_Write(OP_WCR, MIREGADR, PHCON2);
+  ENC28J60_Write(OP_WCR, MIWRL, PHCON2_HDLDIS); // 01010101 11111111
+  ENC28J60_Write(OP_WCR, MIWRH, PHCON2_HDLDIS >> 8);
+
   // switch to bank 0
-  
-  ENC28J60_SetBank(OP_WCR,BANK0);//TROCA PARA BANCO 0
+  ENC28J60_SetBank(BANK0); //TROCA PARA BANCO 0
   // enable interrutps
-  ENC28J60_Write(OP_BFS, EIE, EIE_INTIE|EIE_PKTIE);
+  ENC28J60_Write(OP_BFS, EIE, EIE_INTIE | EIE_PKTIE);
   // enable packet reception
   ENC28J60_Write(OP_BFS, ECON1, ECON1_RXEN);
-  
 }
-
-//void Send_Packet(ARP mensagem) {
-  
-
-  
-//}
-
-
-//
-
-//=====================================================Funções=====================================================================================================
