@@ -1,10 +1,8 @@
-
 /*Biblioteca controle da interfece SPI do atmega328p
 Versão: 0.3
 Autores:Breno Borrasqui;Gabriel Candido;Larisse Souza;Rafaela Borges;Vittorio Maretto
 Data:25/03/22  
 */
-
 //=====================================================Bibliotecas=================================================================================================
 
 //=====================================================Definições==================================================================================================
@@ -19,8 +17,6 @@ void SPI_MasterBegin();
 void SPI_Write(unsigned char data);
 void SPI_Message(unsigned char data);
 unsigned char SPI_Read(unsigned char andress);
-
-
 
 //=====================================================Funções=====================================================================================================
 void SPI_MasterBegin(){ //Configura os registradores do SPI
@@ -48,14 +44,6 @@ void SPI_Write(unsigned char data){
   while(!(SPSR&(1<<SPIF)));// Testa a flag de termino de trasmissão e aguarda se setada
 }
 
-
-unsigned char SPI_Read(){
-  SPI_Write(0x00);
-  if(debug)Serial.println("read:");
-  if(debug)Serial.println(SPDR,HEX);
-  return SPDR;
-}
-
 void SPI_Message(unsigned char *data){//Envia um vetor de bytes via SPI em pares
   int aux=1;
   while(*data != NULL){
@@ -73,19 +61,20 @@ void SPI_Message(unsigned char *data){//Envia um vetor de bytes via SPI em pares
   }
 }
 
-
-unsigned char SPI_Read_one(unsigned char address){
+unsigned char SPI_Read(unsigned char address){
   
   COM_start;
   
   SPI_Write(address);
 
-  SPI_Read();
+  SPI_Write(0x00);
 
   COM_end;
   
   if(debug)Serial.println("read:");
   if(debug)Serial.println(SPDR,HEX);
+  
+  unsigned char message = SPDR;
  
-  return SPDR;
+  return message;
 }
